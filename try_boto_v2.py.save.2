@@ -1,0 +1,43 @@
+
+import boto
+import boto3
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from PIL import ImageFile
+
+s3 = boto.connect_s3()
+bucket = s3.get_bucket('ops-sofia-dev')
+
+print("loop")
+for key in bucket.list():
+    print(key.name.encode('utf-8'))
+print("done")
+
+k = Key(bucket)
+k.key = 'foobar'
+k.set_contents_from_string('This is a test of S3')
+a = k.get_contents_as_string()
+print(a)
+
+k.key = 'myfile'
+k.set_contents_from_filename('/home/ubuntu/environments/img_dir2/a0.jpeg')
+
+print("uploaded")
+
+def get_image_resolution(s3, bucket=None, key=None):
+    end = 1024
+    parser = ImageFile.Parser()
+    chunk = s3.get_object(Bucket=bucket, Key=key, Range='bytes={}-{}'.format(0, end))
+    while chunk:
+        parser.feed(chunk["Body"].read())
+        if parser.image:
+            break
+        end += 1024
+        time.sleep(0.1)
+        chunk = s3.get_object(Bucket=bucket, Key=key, Range='bytes={}-{}'.format(0, end))
+    return parser.image.size
+
+session = boto3.session.Session()
+client = session.client('s3')
+mykey = 'myfile'
+size = get_image_resolution(client, bucket=bucket,

@@ -1,0 +1,18 @@
+import boto
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+
+s3 = boto.connect_s3()
+bucket = s3.get_bucket('ops-sofia-dev')
+
+print("loop")
+for key in bucket.list():
+    print(key.name.encode('utf-8'))
+print("done")
+
+k = Key(bucket)
+k.key = 'fooba'
+k.set_contents_from_string('This is a test
+    print(key.key.get_content_as_string())
+print("\ndone")
+

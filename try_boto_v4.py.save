@@ -1,0 +1,26 @@
+
+import boto
+import boto3
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from PIL import ImageFile
+import time
+import datetime
+from time import mktime
+from datetime import datetime
+
+
+s3 = boto.connect_s3()
+bucket = s3.get_bucket('cn-saved-logs')
+
+region ='us-east-1'
+session = boto3.session.Session()
+client = session.client('s3')
+
+
+
+print("loop")
+for key in bucket.list():
+    print(key.name.encode('utf-8'))
+
+print('done')

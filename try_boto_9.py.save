@@ -1,0 +1,69 @@
+import Queue
+import boto
+import boto3
+import glob
+from boto.s3.connection import S3Connection
+from boto.s3.key import Key
+from PIL import ImageFile, Image
+
+
+
+s3 = boto.connect_s3()
+bucket = s3.get_bucket('ops-sofia-dev')
+input_queue = Queue.Queue()
+
+
+def get_s3_images(bucket):
+    images = [i.name for i in bucket.list()]
+    print(images)
+    for image in images:
+        input_queue.put({
+            'image': image,
+    })
+
+def get_image_resolution(s3, bucket=None, key=None):
+    end = 1024
+    parser = ImageFile.Parser()
+    chunk = s3.get_object(Bucket=bucket, Key=key, Range='bytes={}-{}'.format(0, end))
+    while chunk:
+        parser.feed(chunk["Body"].read())
+        if parser.image:
+            break
+        end += 1024
+        time.sleep(0.1)
+        chunk = s3.get_object(Bucket=bucket, Key=key, Range='bytes={}-{}'.format(0, end))
+    return parser.image.size
+
+
+
+
+def enqueue_images(path):
+        images = [filename for filename in glob.glob(path+'*.jpeg')]
+        for image in images:
+                input_queue.put({
+                        'image': image,
+        })
+        return input_queue
+
+
+path = '/home/ubuntu/environments/img_dir2/'
+
+i_q = enqueue_images(path)
+
+
+print('upload__')
+while not i_q.empty():
+      job = i_q.get(True, 1)
+      image = job["image"]
+      
+
+
+#print('queue:')
+#while not input_queue.empty():
+#          job = input_queue.get(True, 1)
+#          image = job["image"]          print(image)
+#          mykey = image
+#          size = get_image_resolution(client, bucket=mybucket, key=mykey)
+#          print(str(size))
+
+
