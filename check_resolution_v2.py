@@ -10,6 +10,7 @@ import datetime
 import email.utils
 import smtplib
 
+import time
 import datetime
 from time import mktime
 from datetime import datetime
@@ -137,7 +138,7 @@ def pull_size(input_queue, output, conn, mybucket, my_df, iteration):
             job = input_queue.get(True, 1)
             image = job["image"]
             time_st = job["time_st"]
-          #  print(image, time_st)
+#            print(image, time_st)
             key = image
             size = None
             try:
@@ -176,10 +177,15 @@ def push_sizes(input_queue, output):
         if not output.empty():
             job = output.get(True, 1)
             valid = job.get('valid')
+
             if not valid:
-                errors.append(job)
-                errors_text.append("%s on %s have wrong resolution of %s x %s. Duration: %s" % (
-                    job['channel'], job['server'], job['size'][0], job['size'][1], job['duration']))
+               # errors.append(job)
+ #               print("----------------->",job)
+               # errors.append(job)
+                errors.extend([job['channel'], job['server'], job['size']])
+                errors_text.append("%s on %s have wrong resolution of %s x %s.   Below is a log of last 4 iterations (Label: 1 invalid; 0 valid)" %  (
+                    job['channel'], job['server'], job['size'][0], job['size'][1]))
+                errors_text.append("%s" %(job['duration']) )
         else:
             time.sleep(1)
     lock.acquire()
@@ -192,6 +198,9 @@ def push_sizes(input_queue, output):
         else:
             with open(pickle_filepath) as pickle_handle:
                 old_errors = cPickle.load(pickle_handle)
+ #       print(errors)
+        print("----------\n")
+#        print(old_errors)
         if errors != old_errors:
             msg = '\n'.join(errors_text)
             header = errors_text[0]
@@ -210,11 +219,11 @@ def push_sizes(input_queue, output):
 def send_alert(description, details, event_name):
     try:
    #     print("alert-pd")
-       # pager = pygerduty.PagerDuty(PAGERDUTY_SUBDOMAIN, PAGERDUTY_TOKEN)
-       # pager.create_event(PAGERDUTY_TOKEN, description, "trigger", details, event_name)
+        pager = pygerduty.PagerDuty(PAGERDUTY_SUBDOMAIN, PAGERDUTY_TOKEN)
+        pager.create_event(PAGERDUTY_TOKEN, description, "trigger", details, event_name)
     #    print("try mail")
         sender = MailSender(EMAIL_SERVER, EMAIL_USERNAME, EMAIL_PASSWORD, EMAIL_PORT)
-        sender(details, *EMAIL_DISTRIBUTION, subject = details)
+        sender(details, *EMAIL_DISTRIBUTION, subject = description)
      #   print("aler-mail")
     finally:
         pass
@@ -239,9 +248,7 @@ def main_v4(profile, region, bucket_name, verbose):
     images = [i.name for i in bucket.list()]
     img_ts = []
     for key in bucket.list():
-        dt = time.strptime(key.last_modified[:19], "%Y-%m-%dT%H:%M:%S")
-        dt2 = datetime.fromtimestamp(mktime(dt))
-        ts = time.mktime(dt2.timetuple())
+        ts=key.last_modified[:19]
         img_ts.append(ts)
 
 
@@ -258,7 +265,7 @@ def main_v4(profile, region, bucket_name, verbose):
     file_ = Path(path)
     if file_.exists():
 	   my_df = load_df(path)
-	   rnd = 1 
+	   rnd = 1
 	   iteration = my_df["Iteration"].iloc[-1]+1
     else:
 	   my_df=create_df()

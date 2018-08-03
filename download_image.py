@@ -16,8 +16,8 @@ def download_from_S3():
 
 	for key in bucket.list():
 	    p = full_path+key.name
-	    print(p)
+#	    print(p)
 	    key.get_contents_to_filename(p)
-	print("download completed")
+#	print("download completed")
 
 

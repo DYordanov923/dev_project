@@ -34,7 +34,7 @@ VALID_RESOLUTIONS = [
 def is_not_valid_resolution(width, height):
 
 	res = (width,height)
-	print("resolution: "+ str(res))
+#	print("resolution: "+ str(res))
 
 	if res not in VALID_RESOLUTIONS:
 		flag = True
@@ -73,12 +73,12 @@ def upload_to_S3():
     path = '/home/ubuntu/environments/img_dir4/'
     i_q = enqueue_images(path)
 
-    print('upload__')
+ #   print('upload__')
     while not i_q.empty():
         job = i_q.get(True, 1)
         image = job["image"]
         
-        print(image)
+ #       print(image)
         mykey = os.path.basename(image)
         k = Key(bucket)
         k.key = mykey
